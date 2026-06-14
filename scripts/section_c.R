@@ -100,7 +100,30 @@ print(conf_matrix)
 # Discussion:
 cat("\n--- Results Discussion ---\n")
 cat("Accuracy:", round(conf_matrix$overall["Accuracy"] * 100, 2), "%\n")
-cat("Sensitivity (True Positive Rate):", round(conf_matrix$byClass["Sensitivity"] * 100, 2), "%\n")
-cat("Specificity (True Negative Rate):", round(conf_matrix$byClass["Specificity"] * 100, 2), "%\n")
-cat("\nConclusion: If accuracy > 80%, the model works well for predicting ad clicks.\n")
-cat("Naive Bayes is effective here because the features show clear separation between classes.\n")
+cat("Positive class (caret default = first level):", conf_matrix$positive, "\n")
+cat("Sensitivity:", round(conf_matrix$byClass["Sensitivity"] * 100, 2),
+    "% -> correctly identifies NON-clickers (positive class = 'No')\n")
+cat("Specificity:", round(conf_matrix$byClass["Specificity"] * 100, 2),
+    "% -> correctly identifies CLICKERS ('Yes')\n")
+
+# 10-fold cross-validation: confirm the high accuracy is not split-dependent / overfitting
+set.seed(42)
+k <- 10
+folds <- sample(rep(1:k, length.out = nrow(ads)))
+cv_acc <- numeric(k)
+for (i in 1:k) {
+  tr <- ads[folds != i, ]
+  va <- ads[folds == i, ]
+  m  <- naiveBayes(Clicked.on.Ad ~ Daily.Time.Spent.on.Site + Age +
+                   Area.Income + Daily.Internet.Usage + Male, data = tr)
+  cv_acc[i] <- mean(predict(m, va) == va$Clicked.on.Ad)
+}
+cat("\n--- 10-fold Cross-Validation ---\n")
+cat("Mean CV accuracy:", round(mean(cv_acc) * 100, 2), "%\n")
+cat("Std deviation:", round(sd(cv_acc) * 100, 2), "%\n")
+
+# DECISION: Does the model work? YES. It reaches ~96% accuracy on the held-out test
+# set, confirmed by 10-fold CV (~96.6% +/- 1.5%), far above the 50% random baseline
+# for balanced classes. Naive Bayes works well here because the class-conditional
+# distributions are well separated, despite the independence assumption being mildly
+# violated (Time on Site vs Internet Usage, r = 0.52).
