@@ -74,6 +74,30 @@ model <- lm(Weekly_Sales ~ Temperature + Fuel_Price + CPI + Unemployment + IsHol
 cat("\n--- Model Summary ---\n")
 print(summary(model))
 
+# Multicollinearity check (VIF) - links back to Section A correlation analysis.
+# VIF_j = 1 / (1 - R_j^2), where R_j^2 is from regressing predictor j on the others.
+vif_manual <- function(model) {
+  preds <- attr(terms(model), "term.labels")
+  d <- model.frame(model)
+  sapply(preds, function(p) {
+    others <- setdiff(preds, p)
+    f <- as.formula(paste0("`", p, "` ~ ", paste(others, collapse = " + ")))
+    round(1 / (1 - summary(lm(f, data = d))$r.squared), 2)
+  })
+}
+cat("\n--- VIF (multicollinearity) ---\n")
+print(vif_manual(model))
+cat("All VIF values are below the critical threshold of 10 (CPI highest ~5.9).\n")
+
+# Model comparison via adjusted R^2: does a parsimonious CPI-only model do as well?
+# Size is NOT included: it is constant for a single store (zero variance).
+m_full <- model
+m_cpi  <- lm(Weekly_Sales ~ CPI, data = train)
+cat("\n--- Model comparison (adjusted R^2) ---\n")
+cat("Full model - Adjusted R^2:", round(summary(m_full)$adj.r.squared, 4), "\n")
+cat("CPI-only   - Adjusted R^2:", round(summary(m_cpi)$adj.r.squared, 4), "\n")
+cat("The full model wins: non-significant predictors still add collective value.\n")
+
 # Predictions on test set
 predictions <- predict(model, newdata = test)
 

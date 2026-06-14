@@ -3,3 +3,11 @@
 .RData
 .Rproj.user
 *.Rproj
+
+# R / LaTeX build artifacts
+Rplots.pdf
+*.aux
+*.log
+*.toc
+*.out
+texput.log
