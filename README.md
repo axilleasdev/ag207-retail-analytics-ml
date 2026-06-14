@@ -1,4 +1,4 @@
-# AG207 — Retail Analytics & Machine Learning
+# AG207 Retail Analytics & Machine Learning
 
 Individual assignment for **AG207 Machine Learning with R** (University of Essex,
 BSc Computing — AI, 2025–2026).
